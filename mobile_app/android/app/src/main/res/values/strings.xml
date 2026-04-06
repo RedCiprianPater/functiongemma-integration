@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">NWO Robotics</string>
+    <string name="status_ready">Ready</string>
+    <string name="hint_command">Enter command...</string>
+    <string name="button_send">Send</string>
+    <string name="button_voice">Voice</string>
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_speech_not_available">Speech recognition not available</string>
+    <string name="error_permission_denied">Permission denied</string>
+</resources>

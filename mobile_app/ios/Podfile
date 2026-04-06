@@ -1,0 +1,47 @@
+platform :ios, '15.0'
+
+use_frameworks!
+
+target 'NwoRoboticsController' do
+  # TensorFlow Lite
+  pod 'TensorFlowLiteSwift', '~> 2.14.0'
+  pod 'TensorFlowLiteMetalDelegate', '~> 2.14.0'
+  
+  # Networking
+  pod 'Alamofire', '~> 5.8.0'
+  
+  # JSON parsing
+  pod 'SwiftyJSON', '~> 5.0.1'
+  
+  # Keychain access
+  pod 'KeychainSwift', '~> 20.0.0'
+  
+  # Logging
+  pod 'CocoaLumberjack/Swift', '~> 3.8.0'
+  
+  # Reactive programming (optional)
+  # pod 'RxSwift', '~> 6.6.0'
+  # pod 'RxCocoa', '~> 6.6.0'
+  
+  target 'NwoRoboticsControllerTests' do
+    inherit! :search_paths
+    pod 'Quick', '~> 7.0.0'
+    pod 'Nimble', '~> 12.0.0'
+  end
+  
+  target 'NwoRoboticsControllerUITests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      
+      # Enable Swift 5.9
+      config.build_settings['SWIFT_VERSION'] = '5.9'
+    end
+  end
+end

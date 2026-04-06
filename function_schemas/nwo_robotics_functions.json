@@ -1,0 +1,485 @@
+{
+  "functions": [
+    {
+      "name": "robot_command",
+      "description": "Send a natural language command to a robot for execution using the NWO Robotics API. Maps to POST /api-robotics.php?action=execute",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string", "description": "Unique identifier of the robot" },
+          "instruction": { "type": "string", "description": "Natural language instruction" },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "emergency"], "default": "normal" }
+        },
+        "required": ["robot_id", "instruction"]
+      }
+    },
+    {
+      "name": "swarm_deploy",
+      "description": "Deploy multiple robots as a coordinated swarm. Maps to POST /api-robotics.php?action=swarm",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "swarm_id": { "type": "string" },
+          "robot_ids": { "type": "array", "items": { "type": "string" } },
+          "formation": { "type": "string", "enum": ["line", "grid", "circle", "v_formation", "diamond", "custom"], "default": "grid" },
+          "mission_type": { "type": "string", "enum": ["patrol", "search", "mapping", "delivery", "inspection", "surveillance", "rescue"] }
+        },
+        "required": ["swarm_id", "robot_ids", "mission_type"]
+      }
+    },
+    {
+      "name": "sensor_activate",
+      "description": "Activate robot sensors. Maps to POST /api-robotics.php?action=sensor_fusion",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "sensor_type": { "type": "string", "enum": ["camera", "lidar", "thermal", "imu", "gps", "ultrasonic", "microphone", "depth", "rgbd", "radar"] },
+          "mode": { "type": "string", "enum": ["stream", "capture", "calibrate", "standby", "record"], "default": "stream" }
+        },
+        "required": ["robot_id", "sensor_type"]
+      }
+    },
+    {
+      "name": "slam_start",
+      "description": "Start SLAM for navigation/mapping. Maps to POST /api-robotics-slam.php",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "mode": { "type": "string", "enum": ["mapping", "localization", "navigation"] },
+          "resolution": { "type": "number", "default": 0.05 }
+        },
+        "required": ["robot_id", "mode"]
+      }
+    },
+    {
+      "name": "navigation_goto",
+      "description": "Navigate to coordinates. Maps to POST /api-robotics.php?action=navigate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "destination": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" }, "frame": { "type": "string", "default": "map" } } },
+          "speed": { "type": "number", "default": 1.0 }
+        },
+        "required": ["robot_id", "destination"]
+      }
+    },
+    {
+      "name": "emergency_stop",
+      "description": "Emergency stop robot(s). Maps to POST /api-robotics.php?action=emergency or ROS2 bridge",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string", "description": "Robot ID or 'all'" },
+          "reason": { "type": "string" }
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "status_check",
+      "description": "Check robot status. Maps to GET /api-robotics.php?action=query_state",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "detailed": { "type": "boolean", "default": false }
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "manipulator_control",
+      "description": "Control robot manipulator. Maps to POST /api-robotics.php?action=manipulate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "action": { "type": "string", "enum": ["open", "close", "grasp", "release", "move_to", "home"] }
+        },
+        "required": ["robot_id", "action"]
+      }
+    },
+    {
+      "name": "inference",
+      "description": "Run model inference. Maps to POST /api-robotics.php?action=inference or Edge API",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "model_id": { "type": "string" },
+          "input": { "type": "object" },
+          "use_edge": { "type": "boolean", "default": false }
+        },
+        "required": ["model_id", "input"]
+      }
+    },
+    {
+      "name": "list_models",
+      "description": "List available models. Maps to GET /api-robotics.php?action=list_models",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "filter": { "type": "string", "enum": ["all", "robotics", "vision", "nlp", "multimodal"], "default": "all" }
+        }
+      }
+    },
+    {
+      "name": "get_model_info",
+      "description": "Get model details. Maps to GET /api-robotics.php?action=get_model_info",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "model_id": { "type": "string" }
+        },
+        "required": ["model_id"]
+      }
+    },
+    {
+      "name": "task_planner",
+      "description": "Break down complex tasks. Maps to POST /api-robotics.php?action=task_planner",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "task_description": { "type": "string" }
+        },
+        "required": ["robot_id", "task_description"]
+      }
+    },
+    {
+      "name": "execute_subtask",
+      "description": "Execute subtask from plan. Maps to POST /api-robotics.php?action=execute_subtask",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "subtask_id": { "type": "string" },
+          "plan_id": { "type": "string" }
+        },
+        "required": ["robot_id", "subtask_id", "plan_id"]
+      }
+    },
+    {
+      "name": "learning_recommend",
+      "description": "Get learning recommendations. Maps to POST /api-robotics.php?action=learning&subaction=recommend",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "task_type": { "type": "string" }
+        },
+        "required": ["robot_id", "task_type"]
+      }
+    },
+    {
+      "name": "learning_log",
+      "description": "Log execution for learning. Maps to POST /api-robotics.php?action=learning&subaction=log",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "task_id": { "type": "string" },
+          "success": { "type": "boolean" }
+        },
+        "required": ["robot_id", "task_id", "success"]
+      }
+    },
+    {
+      "name": "register_agent",
+      "description": "Register new agent. Maps to POST /api-agent-register.php",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" },
+          "agent_type": { "type": "string" },
+          "capabilities": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["agent_id", "agent_type"]
+      }
+    },
+    {
+      "name": "update_agent",
+      "description": "Update agent. Maps to PUT /api-robotics.php?action=update_agent",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" },
+          "capabilities": { "type": "array", "items": { "type": "string" } },
+          "status": { "type": "string", "enum": ["active", "inactive", "maintenance", "offline"] }
+        },
+        "required": ["agent_id"]
+      }
+    },
+    {
+      "name": "get_agent",
+      "description": "Get agent info. Maps to GET /api-robotics.php?action=get_agent",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" }
+        },
+        "required": ["agent_id"]
+      }
+    },
+    {
+      "name": "agent_discovery_health",
+      "description": "Health check. Maps to GET /api-agent-discovery.php?action=health",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "agent_discovery_whoami",
+      "description": "Get agent identity. Maps to GET /api-agent-discovery.php?action=whoami",
+      "parameters": {
+        "type": "object",
+        "properties": { "agent_id": { "type": "string" } },
+        "required": ["agent_id"]
+      }
+    },
+    {
+      "name": "agent_discovery_capabilities",
+      "description": "Discover capabilities. Maps to GET /api-agent-discovery.php?action=capabilities",
+      "parameters": {
+        "type": "object",
+        "properties": { "agent_id": { "type": "string" } }
+      }
+    },
+    {
+      "name": "agent_discovery_dry_run",
+      "description": "Validate task. Maps to POST /api-agent-discovery.php?action=dry-run",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" },
+          "task": { "type": "object" }
+        },
+        "required": ["agent_id", "task"]
+      }
+    },
+    {
+      "name": "agent_discovery_plan",
+      "description": "Generate plan. Maps to POST /api-agent-discovery.php?action=plan",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" },
+          "task_description": { "type": "string" }
+        },
+        "required": ["agent_id", "task_description"]
+      }
+    },
+    {
+      "name": "ros2_submit_action",
+      "description": "Submit ROS2 action. Maps to POST https://nwo-ros2-bridge.onrender.com/api/v1/action",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "action_type": { "type": "string" }
+        },
+        "required": ["robot_id", "action_type"]
+      }
+    },
+    {
+      "name": "ros2_list_robots",
+      "description": "List ROS2 robots. Maps to GET https://nwo-ros2-bridge.onrender.com/api/v1/robots",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "ros2_get_robot_status",
+      "description": "Get ROS2 robot status. Maps to GET https://nwo-ros2-bridge.onrender.com/api/v1/robots/{id}/status",
+      "parameters": {
+        "type": "object",
+        "properties": { "robot_id": { "type": "string" } },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "ros2_send_command",
+      "description": "Send ROS2 command. Maps to POST https://nwo-ros2-bridge.onrender.com/api/v1/robots/{id}/command",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "command": { "type": "string" }
+        },
+        "required": ["robot_id", "command"]
+      }
+    },
+    {
+      "name": "ros2_emergency_stop",
+      "description": "ROS2 emergency stop. Maps to POST https://nwo-ros2-bridge.onrender.com/api/v1/robots/{id}/emergency_stop",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "reason": { "type": "string" }
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "simulate_trajectory",
+      "description": "Simulate trajectory. Maps to POST /api-simulation.php?action=simulate_trajectory",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "trajectory": { "type": "object" }
+        },
+        "required": ["robot_id", "trajectory"]
+      }
+    },
+    {
+      "name": "check_collision",
+      "description": "Check collision. Maps to POST /api-simulation.php?action=check_collision",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "pose": { "type": "object" }
+        },
+        "required": ["robot_id", "pose"]
+      }
+    },
+    {
+      "name": "get_tactile",
+      "description": "Get tactile sensor data. Maps to POST /api-orca.php?action=get_tactile",
+      "parameters": {
+        "type": "object",
+        "properties": { "robot_id": { "type": "string" } },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "slip_detection",
+      "description": "Detect object slip. Maps to POST /api-tactile.php?action=slip_detection",
+      "parameters": {
+        "type": "object",
+        "properties": { "robot_id": { "type": "string" } },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "start_online_rl",
+      "description": "Start online RL session. Maps to POST /api-online-rl.php?action=start_online_rl",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "task": { "type": "string" }
+        },
+        "required": ["robot_id", "task"]
+      }
+    },
+    {
+      "name": "submit_telemetry",
+      "description": "Submit telemetry. Maps to POST /api-online-rl.php?action=submit_telemetry",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": { "type": "string" },
+          "telemetry": { "type": "object" }
+        },
+        "required": ["robot_id", "telemetry"]
+      }
+    },
+    {
+      "name": "create_dataset",
+      "description": "Create training dataset. Maps to POST /api-fine-tune.php?action=create_dataset",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "data": { "type": "array" }
+        },
+        "required": ["name", "data"]
+      }
+    },
+    {
+      "name": "start_fine_tuning",
+      "description": "Start fine-tuning job. Maps to POST /api-fine-tune.php?action=start_job",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "dataset_id": { "type": "string" },
+          "model_id": { "type": "string" }
+        },
+        "required": ["dataset_id", "model_id"]
+      }
+    },
+    {
+      "name": "list_embodiments",
+      "description": "List robot embodiments. Maps to GET /api-embodiment.php?action=list",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_embodiment_detail",
+      "description": "Get embodiment details. Maps to GET /api-embodiment.php?action=detail",
+      "parameters": {
+        "type": "object",
+        "properties": { "robot_type": { "type": "string" } },
+        "required": ["robot_type"]
+      }
+    },
+    {
+      "name": "get_urdf",
+      "description": "Get URDF. Maps to GET /api-embodiment.php?action=urdf",
+      "parameters": {
+        "type": "object",
+        "properties": { "robot_type": { "type": "string" } },
+        "required": ["robot_type"]
+      }
+    },
+    {
+      "name": "calibrate_confidence",
+      "description": "Calibrate confidence scores. Maps to POST /api-calibration.php?action=calibrate",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scores": { "type": "array", "items": { "type": "number" } }
+        },
+        "required": ["scores"]
+      }
+    },
+    {
+      "name": "check_agent_balance",
+      "description": "Check agent quota. Maps to GET /api-agent-balance.php",
+      "parameters": {
+        "type": "object",
+        "properties": { "agent_id": { "type": "string" } },
+        "required": ["agent_id"]
+      }
+    },
+    {
+      "name": "agent_pay",
+      "description": "Pay for tier upgrade. Maps to POST /api-agent-pay.php",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "agent_id": { "type": "string" },
+          "tier": { "type": "string", "enum": ["free", "basic", "pro", "enterprise"] }
+        },
+        "required": ["agent_id", "tier"]
+      }
+    },
+    {
+      "name": "streaming_config",
+      "description": "Get streaming config. Maps to GET /api-robotics.php?action=streaming_config",
+      "parameters": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "inference_stream",
+      "description": "Stream inference via SSE. Maps to GET /api-robotics.php?action=inference_stream&format=sse",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "model_id": { "type": "string" },
+          "input": { "type": "object" }
+        },
+        "required": ["model_id", "input"]
+      }
+    }
+  ]
+}

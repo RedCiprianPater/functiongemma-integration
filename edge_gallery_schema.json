@@ -1,0 +1,213 @@
+{
+  "name": "NWO Robotics Controller",
+  "description": "Control NWO Robotics fleet with natural language voice commands",
+  "version": "1.0.0",
+  "author": "NWO Robotics",
+  "license": "MIT",
+  
+  "model": {
+    "name": "functiongemma-nwo-v1",
+    "base_model": "google/functiongemma-270m",
+    "format": "litert",
+    "quantization": "int8",
+    "context_length": 2048,
+    "function_calling": true
+  },
+  
+  "system_prompt": "You are a robot control assistant for NWO Robotics. Convert natural language commands to function calls. Available robots: Unitree Go2, Boston Dynamics Spot, DJI drones, robotic arms. Respond with JSON: {\"calls\": [{\"name\": \"function_name\", \"arguments\": {...}}]}. Be concise and accurate.",
+  
+  "functions": [
+    {
+      "name": "robot_command",
+      "description": "Send natural language instruction to a robot",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string", "description": "Robot identifier"},
+          "instruction": {"type": "string", "description": "Natural language command"},
+          "priority": {"type": "string", "enum": ["low", "normal", "high", "emergency"]}
+        },
+        "required": ["robot_id", "instruction"]
+      }
+    },
+    {
+      "name": "swarm_deploy",
+      "description": "Deploy multiple robots as coordinated swarm",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "swarm_id": {"type": "string"},
+          "robot_ids": {"type": "array", "items": {"type": "string"}},
+          "formation": {"type": "string", "enum": ["line", "grid", "circle", "v_formation"]},
+          "mission_type": {"type": "string", "enum": ["patrol", "search", "mapping", "inspection"]}
+        },
+        "required": ["swarm_id", "robot_ids", "mission_type"]
+      }
+    },
+    {
+      "name": "sensor_activate",
+      "description": "Activate or configure robot sensors",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "sensor_type": {"type": "string", "enum": ["camera", "lidar", "thermal", "imu", "gps"]},
+          "mode": {"type": "string", "enum": ["stream", "capture", "calibrate"]}
+        },
+        "required": ["robot_id", "sensor_type"]
+      }
+    },
+    {
+      "name": "slam_start",
+      "description": "Start SLAM mapping or localization",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "mode": {"type": "string", "enum": ["mapping", "localization", "navigation"]},
+          "resolution": {"type": "number", "description": "Map resolution in meters"}
+        },
+        "required": ["robot_id", "mode"]
+      }
+    },
+    {
+      "name": "navigation_goto",
+      "description": "Navigate to coordinates",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "destination": {
+            "type": "object",
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"},
+              "z": {"type": "number"},
+              "frame": {"type": "string", "enum": ["map", "robot"]}
+            }
+          },
+          "obstacle_avoidance": {"type": "boolean"},
+          "speed": {"type": "number"}
+        },
+        "required": ["robot_id", "destination"]
+      }
+    },
+    {
+      "name": "emergency_stop",
+      "description": "Emergency stop robot motion",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "reason": {"type": "string"}
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "status_check",
+      "description": "Check robot battery and system health",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "detailed": {"type": "boolean"}
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "manipulator_control",
+      "description": "Control robot gripper/arm",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "action": {"type": "string", "enum": ["open", "close", "grasp", "release"]},
+          "force": {"type": "number"}
+        },
+        "required": ["robot_id", "action"]
+      }
+    },
+    {
+      "name": "patrol_route",
+      "description": "Start patrol route",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "loop": {"type": "boolean"}
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "return_to_base",
+      "description": "Return to charging station",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"}
+        },
+        "required": ["robot_id"]
+      }
+    },
+    {
+      "name": "follow_me",
+      "description": "Enable follow mode",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "robot_id": {"type": "string"},
+          "distance": {"type": "number"}
+        },
+        "required": ["robot_id"]
+      }
+    }
+  ],
+  
+  "api": {
+    "type": "rest",
+    "base_url": "https://nwo.capital",
+    "authentication": {
+      "type": "api_key",
+      "header": "X-API-Key",
+      "key_placeholder": "YOUR_API_KEY_HERE"
+    },
+    "endpoints": {
+      "robot_command": "/api-robotics.php?action=execute",
+      "status_check": "/api-robotics.php?action=query_state",
+      "inference": "/api-robotics.php?action=inference"
+    }
+  },
+  
+  "examples": [
+    {
+      "input": "Move go2_001 forward 2 meters",
+      "output": {"calls": [{"name": "robot_command", "arguments": {"robot_id": "go2_001", "instruction": "move forward 2 meters"}}]}
+    },
+    {
+      "input": "Deploy swarm alpha with 3 robots for patrol",
+      "output": {"calls": [{"name": "swarm_deploy", "arguments": {"swarm_id": "alpha", "robot_ids": ["go2_001", "go2_002", "go2_003"], "mission_type": "patrol", "formation": "line"}}]}
+    },
+    {
+      "input": "Emergency stop all robots",
+      "output": {"calls": [{"name": "emergency_stop", "arguments": {"robot_id": "all", "reason": "Emergency stop"}}]}
+    }
+  ],
+  
+  "safety": {
+    "confirmation_required": ["emergency_stop", "swarm_deploy"],
+    "offline_fallback": true,
+    "max_retries": 3,
+    "timeout_seconds": 30
+  },
+  
+  "ui": {
+    "theme": "dark",
+    "primary_color": "#00ff00",
+    "voice_input": true,
+    "show_function_calls": true,
+    "confirmation_dialogs": true
+  }
+}

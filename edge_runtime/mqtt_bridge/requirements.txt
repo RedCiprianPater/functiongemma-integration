@@ -1,0 +1,3 @@
+# FunctionGemma MQTT Bridge - Requirements
+
+paho-mqtt>=1.6.0

@@ -1,0 +1,72 @@
+# Gemma Model Configuration for NWO Robotics
+
+model:
+  name: "functiongemma"
+  variant: "270M"  # Options: 270M, 2B (if available)
+  source: "huggingface://facebook/functiongemma"
+  
+runtime:
+  framework: "litert"  # LiteRT for cross-platform deployment
+  backend: "gpu"  # Options: cpu, gpu, npu
+  threads: 4
+  
+inference:
+  max_tokens: 512
+  temperature: 0.1  # Low temperature for deterministic function calling
+  top_p: 0.95
+  top_k: 40
+  
+function_calling:
+  max_functions_per_call: 5  # Maximum parallel function calls
+  require_confirmation:
+    - emergency_stop
+    - calibration_run
+    - swarm_deploy
+  
+voice:
+  enabled: true
+  wake_word: "Hey NWO"
+  language: "en"
+  stt_model: "whisper_tiny"  # On-device STT
+  tts_model: "piper"  # On-device TTS
+  
+offline_mode:
+  enabled: true
+  cache_size: 100  # Number of command patterns to cache
+  fallback_commands:
+    - emergency_stop
+    - status_check
+    - return_to_base
+    - navigation_goto
+    
+security:
+  require_authentication: true
+  api_key_storage: "keychain"  # iOS/Android secure storage
+  command_logging: true
+  max_command_rate: 10  # Commands per minute
+  
+performance:
+  target_latency_ms: 100  # End-to-end voice-to-action latency
+  prefill_optimization: true
+  kv_cache_enabled: true
+  
+device_profiles:
+  pixel_7_pro:
+    backend: "gpu"
+    threads: 4
+    batch_size: 1
+  
+  iphone_15_pro:
+    backend: "gpu"
+    threads: 4
+    batch_size: 1
+    
+  jetson_orin_nano:
+    backend: "gpu"
+    threads: 6
+    batch_size: 2
+    
+  raspberry_pi_5:
+    backend: "cpu"
+    threads: 4
+    batch_size: 1
